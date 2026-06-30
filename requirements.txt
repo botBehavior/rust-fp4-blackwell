@@ -1,0 +1,2 @@
+# Figures only (fig_gen.py). The kernels build with Cargo + the cuda-oxide backend, not pip.
+matplotlib>=3.7

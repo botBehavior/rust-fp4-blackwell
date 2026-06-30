@@ -1,0 +1,8 @@
+.version 8.7
+.target sm_120a
+.address_size 64
+.visible .entry k() {
+.reg .b32 %a<4>; .reg .b32 %b<2>; .reg .f32 %d<4>; .reg .b32 %sa; .reg .b32 %sb;
+mma.sync.aligned.m16n8k64.row.col.kind::mxf4.block_scale.scale_vec::2X.f32.e2m1.e2m1.f32.ue8m0 {%d0,%d1,%d2,%d3}, {%a0,%a1,%a2,%a3}, {%b0,%b1}, {%d0,%d1,%d2,%d3}, %sa, {0, 0}, %sb, {0, 0};
+ret;
+}

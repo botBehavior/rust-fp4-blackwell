@@ -1,0 +1,36 @@
+===== POSITIVE (expect execute on sm_120) =====
+vecadd           positive  RUN-OK                 rc=0
+  decisive: ✓ SUCCESS: All 1024 elements correct!
+atomics          positive  RUN-OK                 rc=0
+  decisive: === SUCCESS: All 20 atomic tests passed! ===
+sharedmem        positive  RUN-OK                 rc=0
+  decisive: ✓ Single SharedArray: correct neighbor read
+warp_reduce      positive  RUN-OK                 rc=0
+  decisive: ✓ All 8 warp sums correct (each = 496)
+cp_async_small   positive  RUN-OK                 rc=0
+  decisive: PASS: 32 elements copied correctly via cp.async 4-byte
+bf16x2_arith     positive  RUN-OK                 rc=0
+  decisive: PASS: bf16x2_arith, all 8 packed bf16x2 operations verified on sm_120
+dotprod          positive  RUN-OK                 rc=0
+  decisive: SUCCESS: all dp4a/dp2a results match expected values
+inline_ptx       positive  RUN-OK                 rc=0
+  decisive: SUCCESS: inline PTX results are correct
+tiled_gemm       positive  RUN-OK                 rc=0
+  decisive: ✓ SUCCESS: Tiled GEMM computed correctly!
+gemm             positive  RUN-OK                 rc=0
+  decisive: ✓ SUCCESS!
+===== NEGATIVE (datacenter/Hopper features) =====
+tma_copy         negative  RUN-OK                 rc=0
+  decisive: ✓ All 4096 values match!
+cluster          negative  RUN-OK                 rc=0
+  decisive: ✓ Compile-time cluster config test PASSED
+tcgen05          negative  REJECT(driver)         rc=0
+  decisive: ❌ cuModuleLoad failed: DriverError(218, "a PTX JIT compilation failed") (CUresult = 218)
+tcgen05_matmul   negative  SKIP(sm_100/sm_90-only) rc=0
+  decisive: ⚠️  tcgen05 (5th gen tensor cores) requires sm_100 (datacenter Blackwell only).
+wgmma            negative  REJECT(driver)         rc=0
+  decisive: ℹ️  PTX load failed (expected on non-Hopper): DriverError(218, "a PTX JIT compilation failed")
+tma_multicast    negative  REJECT(driver)         rc=0
+  decisive: driver reported: DriverError(218, "a PTX JIT compilation failed")
+gemm_sol         negative  SKIP(sm_100/sm_90-only) rc=0
+  decisive: ⚠️  tcgen05 (5th gen tensor cores) requires sm_100 (datacenter Blackwell only).

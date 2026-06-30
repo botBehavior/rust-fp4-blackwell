@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Real FP4 Tensor-Core Code in Pure Rust on a Gaming GPU — with NVIDIA's Own Compiler</title>
+<style>
+  :root{
+    --ink:#1a1d24; --muted:#5b6270; --line:#e6e8ec; --bg:#ffffff; --soft:#f6f7f9;
+    --accent:#0072B2; --accent2:#009E73; --warn:#D55E00;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       color:var(--ink);background:var(--bg);line-height:1.6;-webkit-font-smoothing:antialiased}
+  .wrap{max-width:860px;margin:0 auto;padding:0 24px}
+  header{background:linear-gradient(180deg,#0b1f33 0%,#0e2a45 100%);color:#fff;padding:64px 0 52px;text-align:center}
+  header h1{font-size:1.95rem;line-height:1.25;margin:0 0 10px;font-weight:700;letter-spacing:-.01em}
+  header .sub{color:#a9c6e0;font-size:1.02rem;margin:0 0 22px}
+  .authors{font-size:1.08rem;margin:18px 0 4px;font-weight:600}
+  .affil{color:#9fb6cc;font-size:.95rem;margin:0 0 26px}
+  .orcid{vertical-align:middle;margin-left:7px;display:inline-block;line-height:0}
+  .btns{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+  .btn{display:inline-flex;align-items:center;gap:7px;background:#16334e;color:#fff;border:1px solid #2b557c;
+       padding:9px 16px;border-radius:8px;text-decoration:none;font-size:.93rem;font-weight:600;transition:.15s}
+  .btn:hover{background:#21466a;transform:translateY(-1px)}
+  .btn.primary{background:var(--accent);border-color:var(--accent)}
+  .btn.primary:hover{background:#0086d1}
+  .tldr{background:var(--soft);border:1px solid var(--line);border-radius:12px;padding:18px 22px;margin:34px 0;
+        font-size:1.05rem}
+  .tldr b{color:var(--accent)}
+  section{padding:30px 0;border-bottom:1px solid var(--line)}
+  section:last-of-type{border-bottom:none}
+  h2{font-size:1.25rem;margin:0 0 14px;letter-spacing:-.01em}
+  p{margin:0 0 14px}
+  .abstract{color:#2a2f3a;font-size:1.02rem}
+  ul.high{list-style:none;padding:0;margin:0;display:grid;gap:12px}
+  ul.high li{background:var(--soft);border:1px solid var(--line);border-left:3px solid var(--accent);
+             border-radius:8px;padding:13px 16px;font-size:.99rem}
+  ul.high li b{color:var(--ink)}
+  figure{margin:24px 0;text-align:center}
+  figure img{max-width:100%;border:1px solid var(--line);border-radius:10px;background:#fff}
+  figcaption{color:var(--muted);font-size:.9rem;margin-top:9px}
+  .cite{background:#0b1f33;color:#dbe6f2;border-radius:10px;padding:16px 18px;font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+        font-size:.84rem;white-space:pre-wrap;overflow-x:auto}
+  .note{color:var(--warn);font-size:.85rem}
+  footer{color:var(--muted);font-size:.86rem;text-align:center;padding:30px 0 50px}
+  a{color:var(--accent)}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <h1>Real FP4 Tensor-Core Code in Pure Rust on a Gaming GPU</h1>
+    <p class="sub">— with NVIDIA's own compiler</p>
+    <div class="authors">Carter Richardson<a class="orcid" href="https://orcid.org/0009-0005-8660-6453" target="_blank" rel="noopener" title="ORCID 0009-0005-8660-6453"><svg width="16" height="16" viewBox="0 0 256 256" aria-label="ORCID iD"><circle cx="128" cy="128" r="128" fill="#A6CE39"/><text x="128" y="172" font-size="118" text-anchor="middle" fill="#fff" font-family="Arial,Helvetica,sans-serif" font-weight="bold">iD</text></svg></a></div>
+    <div class="affil">Independent Researcher · <a href="https://orcid.org/0009-0005-8660-6453" target="_blank" rel="noopener" style="color:#9fb6cc">0009-0005-8660-6453</a></div>
+    <div class="btns">
+      <a class="btn primary" href="https://doi.org/10.5281/zenodo.21056347" target="_blank" rel="noopener">📄 Paper (PDF)</a>
+      <a class="btn" href="https://github.com/botBehavior/rust-fp4-blackwell" target="_blank" rel="noopener">💻 Code</a>
+      <a class="btn" href="#cite">❝ Cite</a>
+    </div>
+  </div>
+</header>
+
+<div class="wrap">
+
+  <div class="tldr">
+    An entire Llama-class decoder, written in <b>pure Rust</b> and compiled to PTX by NVIDIA's own
+    experimental Rust→PTX backend (<b>cuda-oxide</b>), runs FP4-quantized weights on a consumer
+    RTX&nbsp;5070&nbsp;Ti and generates coherent text — within <b>~3.7×</b> of <code>llama.cpp</code>'s
+    decode throughput on a first, unoptimized cut. Viability, not supremacy.
+  </div>
+
+  <section>
+    <h2>Abstract</h2>
+    <p class="abstract">
+      We report a viability result: an entire Llama-class decoder, written in pure Rust and compiled to
+      PTX by NVIDIA's own experimental first-party Rust→PTX backend (cuda-oxide), runs FP4-quantized
+      weights on a consumer NVIDIA RTX 5070 Ti and generates coherent English text. On a real
+      TinyLlama-1.1B model quantized to MXFP4, the engine sustains roughly 181 tokens/s of decode
+      throughput at steady state (median over a clean-GPU re-measurement; 188.6 tok/s in the original
+      session, which the clean run reproduced) — within about 3.7×, or roughly 27%, of
+      <code>llama.cpp</code>'s decode throughput (≈664 tok/s, Q4_K_M, hand-tuned CUDA with CUDA graphs)
+      on the same GPU, on a first, unoptimized cut. Along the way we measured the actual programmable
+      surface of consumer Blackwell (sm_120) for Rust kernels and found it richer than secondary sources
+      imply: TMA, thread-block clusters with distributed shared memory, and native FP4 block-scaled
+      tensor-core MMA all execute, while the tcgen05 5th-generation tensor-memory MMA pipeline correctly
+      does not. We do not claim supremacy; <code>llama.cpp</code> is faster today, and we say where and
+      why. The contribution is that the path exists end to end — a coherent LLM, compiled from Rust by
+      NVIDIA's compiler, on a gaming GPU — and that it lands close on the first attempt, with a clear
+      optimization runway.
+    </p>
+  </section>
+
+  <section>
+    <h2>Highlights</h2>
+    <ul class="high">
+      <li><b>End-to-end pure-Rust FP4 LLM decode</b> on a consumer RTX 5070 Ti via NVIDIA's cuda-oxide — coherent text, no hand-written CUDA C++ in the inference path.</li>
+      <li><b>~3.7× / 27% of <code>llama.cpp</code></b> decode throughput on a first, unoptimized cut. We lose on raw speed and say exactly where and why.</li>
+      <li><b>A measured sm_120 capability map:</b> TMA, thread-block clusters + distributed shared memory, and FP4 block-scaled MMA execute on consumer Blackwell; tcgen05/WGMMA correctly reject.</li>
+      <li><b>The validated FP4 m16n8k64 block-scaled tensor-core operand layout</b> — full element and scale-factor mapping, driven from pure Rust and checked against a CPU reference.</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Results</h2>
+    <figure>
+      <img src="assets/fig_throughput.png" alt="Decode throughput: ours 181 tok/s vs llama.cpp 664 tok/s">
+      <figcaption>Decode head-to-head on the same GPU and model: ~27% of <code>llama.cpp</code>'s
+        throughput, a ~3.7× gap — the honest first-cut result.</figcaption>
+    </figure>
+    <figure>
+      <img src="assets/fig_bandwidth.png" alt="FP4 GEMV bandwidth runway toward the 896 GB/s ceiling">
+      <figcaption>FP4 weight-streaming bandwidth: a first cut (184→270→370 GB/s) with clear runway to
+        the 896 GB/s memory ceiling.</figcaption>
+    </figure>
+  </section>
+
+  <section id="cite">
+    <h2>Citation</h2>
+    <div class="cite">@misc{richardson2026rustfp4,
+  title  = {Real FP4 Tensor-Core Code in Pure Rust on a Gaming GPU --- with NVIDIA's Own Compiler},
+  author = {Richardson, Carter},
+  year   = {2026},
+  note   = {Zenodo},
+  doi    = {10.5281/zenodo.21056347}
+}</div>
+    <p style="color:var(--muted);font-size:.9rem">Archived on Zenodo: <a href="https://doi.org/10.5281/zenodo.21056347">10.5281/zenodo.21056347</a></p>
+  </section>
+
+</div>
+
+<footer>
+  Carter Richardson · 2026 · built on NVIDIA's <a href="https://github.com/NVlabs/cuda-oxide">cuda-oxide</a>.
+  We redistribute no third-party compiler or model weights; every speed figure carries its measurement and configuration.
+</footer>
+</body>
+</html>

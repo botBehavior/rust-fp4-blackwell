@@ -1,0 +1,22 @@
+# Shared matplotlib stylesheet for both papers' data figures.
+# Use: plt.style.use('paperstyle.mplstyle')
+# Export vector PDF: plt.savefig('figX.pdf')  (webapp includes the PDF; arXiv-crisp)
+figure.figsize: 5.5, 3.4
+figure.dpi: 160
+savefig.dpi: 300
+savefig.bbox: tight
+savefig.format: pdf
+font.size: 9
+font.family: serif
+axes.titlesize: 10
+axes.labelsize: 9
+axes.spines.top: False
+axes.spines.right: False
+axes.grid: True
+grid.alpha: 0.3
+grid.linewidth: 0.5
+legend.fontsize: 8
+legend.frameon: False
+lines.linewidth: 1.5
+# Colorblind-safe (Wong) palette
+axes.prop_cycle: cycler('color', ['0072B2','D55E00','009E73','CC79A7','E69F00','56B4E9','F0E442','000000'])
