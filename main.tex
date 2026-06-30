@@ -33,6 +33,9 @@
 @misc{cudarc, title={cudarc: Safe Rust Wrappers for {CUDA}}, author={Lowman, Corey}, howpublished={\url{https://github.com/coreylowman/cudarc}}}
 @misc{zluda, title={{ZLUDA}: {CUDA} on Non-{NVIDIA} {GPUs}}, author={Janik, Andrzej}, howpublished={\url{https://github.com/vosen/ZLUDA}}}
 @misc{candle, title={candle: Minimalist {ML} Framework for Rust}, author={{Hugging Face}}, howpublished={\url{https://github.com/huggingface/candle}}}
+@misc{vectorware, title={Rust's Standard Library on the {GPU}}, author={{VectorWare}}, year={2026}, howpublished={\url{https://www.vectorware.com/blog/rust-std-on-gpu/}}}
+@misc{kostrubiec2026, title={Why {Rust's} Semantics Don't Fit {GPUs} (Yet)}, author={Kostrubiec, Micha\l{}}, year={2026}, howpublished={RustWeek 2026 talk. \url{https://www.youtube.com/watch?v=XnU9eBNTHG0}}}
+@misc{cubecl, title={{CubeCL}: Multi-platform High-performance Compute Language Extension for {Rust}}, author={{Tracel AI}}, howpublished={\url{https://github.com/tracel-ai/cubecl}}}
 % Commit-pin note: cuda-oxide is pinned to commit 7dbd192 in the repro appendix; the llama.cpp baseline build commit is a fill-at-submission item (built from source vs CUDA 12.9, see App.~A).
 \end{filecontents*}
 
@@ -75,7 +78,7 @@ Blackwell tensor cores support 4-bit floating-point operands in the E2M1 format 
 
 \section{Related Work}
 \label{sec:related}
-\textbf{Rust on GPUs.} Several toolchains compile Rust toward GPU targets: \texttt{rust-gpu}~\citep{rustgpu} (SPIR-V/Vulkan), the Rust-CUDA project's \texttt{rustc\_codegen\_nvvm}~\citep{rustcuda} (Rust$\rightarrow$NVVM$\rightarrow$PTX), and host-side binding and launch crates such as \texttt{cudarc}~\citep{cudarc}; \texttt{ZLUDA}~\citep{zluda} re-targets CUDA binaries onto non-NVIDIA hardware. \texttt{cuda-oxide} differs in being NVIDIA's own first-party experimental Rust$\rightarrow$PTX backend, which is the toolchain whose consumer-Blackwell surface we measure.
+\textbf{Rust on GPUs.} Compiling Rust to GPUs is an active and consolidating space. \texttt{rust-gpu}~\citep{rustgpu} (a \texttt{rustc} backend emitting SPIR-V/Vulkan shaders) and the Rust-CUDA project's \texttt{rustc\_codegen\_nvvm}~\citep{rustcuda} (Rust$\rightarrow$NVVM$\rightarrow$PTX) are now both maintained by VectorWare~\citep{vectorware}, whose newer std-on-CUDA work runs general-purpose standard-library Rust on NVIDIA GPUs by mapping each \texttt{std::thread} to a GPU warp --- with warp-lockstep \emph{convergence}, for which Rust has no semantics, as the central open problem~\citep{kostrubiec2026}. Cross-platform kernel DSLs such as \texttt{CubeCL}~\citep{cubecl} compile a single \texttt{\#[cube]} Rust function to CUDA, ROCm, WGPU, SPIR-V, or Metal; host-side binding and launch crates such as \texttt{cudarc}~\citep{cudarc}, and re-targeting layers such as \texttt{ZLUDA}~\citep{zluda} (which runs CUDA binaries on non-NVIDIA hardware), round out the ecosystem. \texttt{cuda-oxide} is distinct from all of these: NVIDIA's own first-party experimental Rust$\rightarrow$PTX backend (Rust MIR $\rightarrow$ Pliron IR $\rightarrow$ LLVM $\rightarrow$ PTX), neither a shader path nor a std-on-GPU runtime. It is the toolchain whose consumer-Blackwell surface we measure, and to our knowledge none of these stacks has been driven end-to-end for FP4 LLM inference.
 
 \textbf{FP4 / MXFP4 inference.} Block-scaled 4-bit floating point --- MXFP4 under the OCP microscaling specification~\citep{ocpmx} and NVFP4 in NVIDIA's Blackwell tensor-core ISA~\citep{ptxisa} --- is documented at the format and hardware level, but production FP4 kernels today are predominantly CUDA C++/PTX. We are not aware of a pure-Rust driver of the \texttt{m16n8k64} block-scaled FP4 MMA, which is the operand-layout contribution of \S\ref{sec:fp4}.
 
