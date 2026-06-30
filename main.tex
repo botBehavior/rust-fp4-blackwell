@@ -21,23 +21,6 @@
 \author{Carter Richardson\\Independent Researcher}
 \date{}
 
-\begin{filecontents*}{\jobname.bib}
-@misc{cudaoxide, title={cuda-oxide}, howpublished={\url{https://github.com/NVlabs/cuda-oxide}}, note={NVIDIA Labs}}
-@misc{llamacpp, title={llama.cpp}, author={Gerganov, Georgi and {the llama.cpp contributors}}, howpublished={\url{https://github.com/ggml-org/llama.cpp}}, year={2023}, note={ggml-org}}
-@misc{tinyllama, title={{TinyLlama}: An Open-Source Small Language Model}, author={Zhang, Peiyuan and Zeng, Guangtao and Wang, Tianduo and Lu, Wei}, year={2024}, eprint={2401.02385}, archivePrefix={arXiv}, primaryClass={cs.CL}, howpublished={\url{https://arxiv.org/abs/2401.02385}}}
-@misc{ocpmx, title={{OCP} Microscaling Formats ({MX}) Specification, Version 1.0}, author={{Open Compute Project}}, year={2023}, howpublished={\url{https://www.opencompute.org/documents/ocp-microscaling-formats-mx-v1-0-spec-final-pdf}}}
-@misc{ptxisa, title={Parallel Thread Execution {ISA}}, author={{NVIDIA}}, howpublished={\url{https://docs.nvidia.com/cuda/parallel-thread-execution/index.html}}, note={\texttt{tcgen05} MMA instructions target \texttt{sm\_100a}/\texttt{sm\_103a}, not \texttt{sm\_120a}}}
-@misc{rtx5070ti, title={{GeForce RTX 5070 Ti}}, author={{NVIDIA}}, year={2025}, howpublished={\url{https://blogs.nvidia.com/blog/studio-ai-geforce-rtx-5070-ti-gpu-dlss/}}, note={16\,GB GDDR7, 256-bit, 896\,GB/s}}
-@misc{rustcuda, title={The {Rust CUDA} Project}, author={{Rust GPU contributors}}, howpublished={\url{https://github.com/Rust-GPU/Rust-CUDA}}}
-@misc{rustgpu, title={Rust {GPU}}, author={{Rust GPU contributors}}, howpublished={\url{https://github.com/Rust-GPU/rust-gpu}}}
-@misc{cudarc, title={cudarc: Safe Rust Wrappers for {CUDA}}, author={Lowman, Corey}, howpublished={\url{https://github.com/coreylowman/cudarc}}}
-@misc{zluda, title={{ZLUDA}: {CUDA} on Non-{NVIDIA} {GPUs}}, author={Janik, Andrzej}, howpublished={\url{https://github.com/vosen/ZLUDA}}}
-@misc{candle, title={candle: Minimalist {ML} Framework for Rust}, author={{Hugging Face}}, howpublished={\url{https://github.com/huggingface/candle}}}
-@misc{vectorware, title={Rust's Standard Library on the {GPU}}, author={{VectorWare}}, year={2026}, howpublished={\url{https://www.vectorware.com/blog/rust-std-on-gpu/}}}
-@misc{kostrubiec2026, title={Why {Rust's} Semantics Don't Fit {GPUs} (Yet)}, author={Kostrubiec, Micha\l{}}, year={2026}, howpublished={RustWeek 2026 talk. \url{https://www.youtube.com/watch?v=XnU9eBNTHG0}}}
-@misc{cubecl, title={{CubeCL}: Multi-platform High-performance Compute Language Extension for {Rust}}, author={{Tracel AI}}, howpublished={\url{https://github.com/tracel-ai/cubecl}}}
-% Commit-pin note: cuda-oxide is pinned to commit 7dbd192 in the repro appendix; the llama.cpp baseline build commit is a fill-at-submission item (built from source vs CUDA 12.9, see App.~A).
-\end{filecontents*}
 
 \begin{document}
 \maketitle
@@ -257,6 +240,20 @@ We did not set out to beat \texttt{llama.cpp}, and we did not. We set out to fin
 \label{sec:repro}
 \textbf{Hardware.} RTX 5070 Ti (GB203, \texttt{sm\_120}, compute capability 12.0), driver 596.49, under WSL2 Ubuntu 24.04. \textbf{Toolchain.} \texttt{cuda-oxide} v0.2.1 (built from source, commit \texttt{7dbd192}), Rust \texttt{nightly-2026-04-03}, bundled LLVM 22.1.2 and clang-21. The FP4 block-scaled MMA requires building with \texttt{--arch sm\_120a}; plain \texttt{sm\_120} rejects the instruction. \textbf{CUDA toolkits --- note the split.} The \texttt{cuda-oxide} PTX path used the machine's CUDA 13.1 \texttt{ptxas} (which supports \texttt{sm\_120a}); the \texttt{llama.cpp} baseline was built against CUDA 12.9, because the 13.1 install lacks cuBLAS while 12.9 is the full toolkit (its \texttt{ptxas} also supports \texttt{sm\_120a}). These are two different uses of two different toolkits; we do not conflate them. \textbf{Measurement conditions.} Decode throughput is measured at steady state on an uncontended GPU: the box has two cards and host-side processes may share one, so we pinned both engines to the idle card and timed 200 tokens to clear the post-idle clock-ramp; each generation follows a $\sim$22\,s host-bound model load, so short timing windows read our engine low. No clock throttling was observed. We only compare engines measured back-to-back in the same session.
 
-\bibliographystyle{plainnat}
-\bibliography{\jobname}
+\begin{thebibliography}{14}
+\bibitem{cudaoxide} NVIDIA Labs. \emph{cuda-oxide}. \url{https://github.com/NVlabs/cuda-oxide}.
+\bibitem{llamacpp} G.~Gerganov and the llama.cpp contributors. \emph{llama.cpp}, 2023. \url{https://github.com/ggml-org/llama.cpp}.
+\bibitem{tinyllama} P.~Zhang, G.~Zeng, T.~Wang, and W.~Lu. TinyLlama: An open-source small language model. \emph{arXiv:2401.02385}, 2024.
+\bibitem{ocpmx} Open Compute Project. \emph{OCP Microscaling Formats (MX) Specification}, Version 1.0, 2023.
+\bibitem{ptxisa} NVIDIA. \emph{Parallel Thread Execution ISA}. \url{https://docs.nvidia.com/cuda/parallel-thread-execution/index.html}.
+\bibitem{rtx5070ti} NVIDIA. \emph{GeForce RTX 5070 Ti}, 2025. 16\,GB GDDR7, 256-bit, 896\,GB/s.
+\bibitem{rustcuda} Rust GPU contributors. \emph{The Rust CUDA Project}. \url{https://github.com/Rust-GPU/Rust-CUDA}.
+\bibitem{rustgpu} Rust GPU contributors. \emph{Rust GPU}. \url{https://github.com/Rust-GPU/rust-gpu}.
+\bibitem{cudarc} C.~Lowman. \emph{cudarc: Safe Rust Wrappers for CUDA}. \url{https://github.com/coreylowman/cudarc}.
+\bibitem{zluda} A.~Janik. \emph{ZLUDA: CUDA on Non-NVIDIA GPUs}. \url{https://github.com/vosen/ZLUDA}.
+\bibitem{candle} Hugging Face. \emph{candle: Minimalist ML Framework for Rust}. \url{https://github.com/huggingface/candle}.
+\bibitem{vectorware} VectorWare. Rust's standard library on the GPU, 2026. \url{https://www.vectorware.com/blog/rust-std-on-gpu/}.
+\bibitem{kostrubiec2026} M.~Kostrubiec. Why Rust's semantics don't fit GPUs (yet). RustWeek 2026 talk. \url{https://www.youtube.com/watch?v=XnU9eBNTHG0}.
+\bibitem{cubecl} Tracel AI. \emph{CubeCL: Multi-platform High-performance Compute Language Extension for Rust}. \url{https://github.com/tracel-ai/cubecl}.
+\end{thebibliography}
 \end{document}
